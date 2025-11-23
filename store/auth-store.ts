@@ -3,21 +3,12 @@
 import { create } from "zustand";
 import { devtools, persist, createJSONStorage } from "zustand/middleware";
 import { authService } from "@/lib/api/services/auth.service";
+import { githubService } from "@/lib/api/services/github.service";
 import type {
   UserResponse,
   LoginInput,
   RegisterInput,
 } from "@/lib/validations/auth.schemas";
-
-/**
- * Auth Store
- * Why Zustand: Simple, performant, TypeScript-friendly
- * Security: Only non-sensitive data is persisted
- *
- * IMPORTANT: This store uses persist middleware.
- * The hydration happens asynchronously, so components need to wait
- * for `hasHydrated` to be true before trusting the auth state.
- */
 
 interface AuthState {
   // State
@@ -26,6 +17,7 @@ interface AuthState {
   error: string | null;
   isInitialized: boolean;
   hasHydrated: boolean;
+  isGithubConnected: boolean;
 
   // Computed
   isAuthenticated: boolean;
@@ -38,6 +30,7 @@ interface AuthState {
   setInitialized: (value: boolean) => void;
   setHasHydrated: (value: boolean) => void;
   clearError: () => void;
+  checkGithubConnection: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,6 +43,7 @@ export const useAuthStore = create<AuthState>()(
         error: null,
         isInitialized: false,
         hasHydrated: false,
+        isGithubConnected: false,
 
         // Computed
         get isAuthenticated() {
@@ -67,8 +61,10 @@ export const useAuthStore = create<AuthState>()(
             // Fetch user data
             const user = await authService.getCurrentUser();
             set({ user, isLoading: false });
+
+            // After login, check GitHub connection status
+            await get().checkGithubConnection();
           } catch (error: unknown) {
-            // Type-safe error handling
             const errorMessage =
               error instanceof Error ? error.message : "Login failed";
             set({
@@ -93,8 +89,10 @@ export const useAuthStore = create<AuthState>()(
             });
 
             set({ user, isLoading: false });
+
+            // After registration+login, check GitHub status
+            await get().checkGithubConnection();
           } catch (error: unknown) {
-            // Type-safe error handling
             const errorMessage =
               error instanceof Error ? error.message : "Registration failed";
             set({
@@ -109,10 +107,9 @@ export const useAuthStore = create<AuthState>()(
           try {
             await authService.logout();
           } catch (error: unknown) {
-            // Log error but don't throw - we want to logout anyway
             console.error("Logout error:", error);
           } finally {
-            set({ user: null, error: null });
+            set({ user: null, error: null, isGithubConnected: false });
           }
         },
 
@@ -120,11 +117,12 @@ export const useAuthStore = create<AuthState>()(
           try {
             const user = await authService.getCurrentUser();
             set({ user });
+
+            // Keep GitHub status in sync when we refresh user
+            await get().checkGithubConnection();
           } catch (error: unknown) {
-            // If fetch fails, user is not authenticated
-            // Log for debugging but don't set error state
             console.error("Fetch user error:", error);
-            set({ user: null });
+            set({ user: null, isGithubConnected: false });
           }
         },
 
@@ -133,6 +131,17 @@ export const useAuthStore = create<AuthState>()(
         setHasHydrated: (value: boolean) => set({ hasHydrated: value }),
 
         clearError: () => set({ error: null }),
+
+        checkGithubConnection: async () => {
+          try {
+            const status = await githubService.getStatus();
+            // assuming getStatus() returns { github_username: string | null; connected: boolean; }
+            set({ isGithubConnected: status.connected });
+          } catch (error: unknown) {
+            console.error("GitHub status check failed:", error);
+            set({ isGithubConnected: false });
+          }
+        },
       }),
       {
         name: "auth-storage",
@@ -143,7 +152,6 @@ export const useAuthStore = create<AuthState>()(
         }),
         // Handle hydration
         onRehydrateStorage: () => (state) => {
-          // Mark as hydrated after rehydration completes
           state?.setHasHydrated(true);
         },
       }

@@ -1,17 +1,3 @@
-/**
- * Toast Notification Utilities
- *
- * Pre-configured toast functions for common deployment scenarios.
- * Uses sonner for clean, accessible toast notifications.
- *
- * Installation:
- * npm install sonner
- *
- * Setup in app/layout.tsx:
- * import { Toaster } from 'sonner';
- * <Toaster position="top-right" />
- */
-
 import { toast } from "sonner";
 import type { ExternalToast } from "sonner";
 
@@ -438,40 +424,3 @@ export const toasts = {
   general: generalToasts,
   file: fileToasts,
 };
-
-/**
- * Usage Examples:
- *
- * // Build notifications
- * toasts.build.triggered(build.id, notebook.id);
- * toasts.build.success(build.id, 125000); // 125 seconds
- * toasts.build.failed(build.id, "Docker build failed");
- *
- * // Deployment notifications
- * toasts.deployment.success(deployment.id, deployment.serviceUrl);
- * toasts.deployment.trafficUpdated(deployment.id, 50);
- *
- * // Pipeline notifications
- * toasts.pipeline.started(pipelineId, notebookId);
- * toasts.pipeline.stepCompleted('build');
- * toasts.pipeline.success(pipelineId, serviceUrl);
- *
- * // General notifications
- * toasts.general.success('Settings saved');
- * toasts.general.error('Failed to save', 'Please try again');
- *
- * // With promises
- * toasts.general.promise(
- *   deploymentService.createDeployment(params),
- *   {
- *     loading: 'Deploying...',
- *     success: 'Deployed successfully',
- *     error: 'Deployment failed',
- *   }
- * );
- *
- * // File uploads
- * const toastId = toasts.file.uploading('notebook.ipynb');
- * // ... later
- * toasts.file.uploaded(toastId, 'notebook.ipynb');
- */

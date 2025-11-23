@@ -2,17 +2,21 @@
 
 import { z } from "zod";
 
-/**
- * Notebook Validation Schemas
- *
- * Why Zod?
- * 1. Runtime validation - catches bad data before it breaks things
- * 2. Type inference - get TypeScript types from schemas
- * 3. Error messages - user-friendly validation errors
- * 4. Security - validate all inputs, never trust data
- *
- * Pattern: Define schema → infer type → export both
- */
+export const modelVersionSchema = z.object({
+  id: z.number(),
+  notebook_id: z.number(),
+  version: z.number(),
+  gcs_path: z.string(),
+  size_bytes: z.number().nullable(),
+  accuracy: z.string().nullable(), // The API returns a string
+  is_active: z.boolean(),
+  uploaded_at: z.string().datetime(),
+});
+
+export const modelVersionListSchema = z.object({
+  versions: z.array(modelVersionSchema),
+  total: z.number(),
+});
 
 /**
  * File upload validation
@@ -164,3 +168,5 @@ export type ValidationError = z.infer<typeof validationErrorSchema>;
 export type ValidationErrorResponse = z.infer<
   typeof validationErrorResponseSchema
 >;
+export type ModelVersion = z.infer<typeof modelVersionSchema>;
+export type ModelVersionList = z.infer<typeof modelVersionListSchema>;

@@ -1,4 +1,4 @@
-import { toast } from "sonner"; // Or your toast library
+import { toast } from "sonner";
 
 export function handleError(
   error: unknown,
@@ -6,7 +6,5 @@ export function handleError(
 ) {
   console.error(context, error);
   const message = error instanceof Error ? error.message : "Unknown error";
-  // Replace with your actual toast/notification trigger
-  // toast.error(`${context}: ${message}`);
-  alert(`${context}: ${message}`); // Fallback if no toast provider
+  alert(`${context}: ${message}`);
 }

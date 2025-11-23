@@ -2,16 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { Download, GitBranch, Terminal, ArrowLeft } from "lucide-react";
+import { Download, Github, Terminal, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { notebookService } from "@/lib/api/services/notebooks.service";
 import Link from "next/link";
 import type { NotebookDetailResponse } from "@/lib/validations/notebook.schemas";
+import { ModelManager } from "@/components/features/notebooks/ModelManager";
+import { PushToGithubModal } from "@/components/features/github/PushToGithubModal";
+import { useAuthStore } from "@/store/auth-store";
 
 export default function NotebookDetailPage() {
   const { id } = useParams();
   const notebookId = Number(id);
 
+  const isGithubConnected = useAuthStore((state) => state.isGithubConnected);
+
+  const deploymentId = 123;
   // Strict type
   const [notebook, setNotebook] = useState<NotebookDetailResponse | null>(null);
 
@@ -82,9 +88,19 @@ export default function NotebookDetailPage() {
             >
               <Download className="mr-2 h-4 w-4" /> DOWNLOAD CODE
             </Button>
-            <Button className="w-full justify-start border-2 border-black bg-white text-black hover:bg-[#B6DFF] rounded-none font-mono font-bold">
-              <GitBranch className="mr-2 h-4 w-4" /> PUSH TO GITHUB
-            </Button>
+            {/* GITHUB INTEGRATION BUTTON */}
+            {isGithubConnected ? (
+              <PushToGithubModal
+                notebookId={notebookId}
+                notebookName={notebook?.name || "notebook"}
+              />
+            ) : (
+              <Link href="/settings">
+                <Button className="w-full justify-start border-2 border-black bg-white text-black hover:bg-gray-100 rounded-none font-mono font-bold">
+                  <Github className="mr-2 h-4 w-4" /> CONNECT GITHUB FIRST
+                </Button>
+              </Link>
+            )}
           </div>
 
           <div className="md:col-span-2 space-y-6">
@@ -100,6 +116,9 @@ export default function NotebookDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* New Model Management Section */}
+      <ModelManager notebookId={notebookId} deploymentId={deploymentId} />
     </div>
   );
 }

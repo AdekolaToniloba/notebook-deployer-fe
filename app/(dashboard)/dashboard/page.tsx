@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useAuthStore } from "@/store/auth-store";
 import {
   BookMarked,
   Cloud,
@@ -11,6 +12,7 @@ import {
   Github,
   Plus,
   Activity as ActivityIcon,
+  GitBranch,
 } from "lucide-react";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import type { Activity } from "@/types"; // Ensure this imports your shared type
@@ -117,6 +119,7 @@ const activities: Activity[] = [
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const isGithubConnected = useAuthStore((state) => state.isGithubConnected);
 
   const stats = useMemo(
     () => [
@@ -204,13 +207,21 @@ export default function DashboardPage() {
             />
           </div>
           <div className="h-40">
-            {/* Ensure this color works with text-black */}
-            <ActionCard
-              title="Connect GitHub"
-              icon={Github}
-              href="/settings"
-              color="#B6DFFF"
-            />
+            {isGithubConnected ? (
+              <ActionCard
+                title="Manage Repos"
+                icon={GitBranch}
+                href="/settings" // Or /deployments if you want to link there
+                color="#a7f3d0" // Light Green for connected
+              />
+            ) : (
+              <ActionCard
+                title="Connect GitHub"
+                icon={Github}
+                href="/settings"
+                color="#B6DFFF" // Blue for unconnected
+              />
+            )}
           </div>
         </div>
       </div>

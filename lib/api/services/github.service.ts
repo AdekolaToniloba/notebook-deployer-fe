@@ -26,6 +26,19 @@ export interface GithubRepo {
   private: boolean;
 }
 
+export interface CreateRepoRequest {
+  notebook_id: number;
+  repo_name: string;
+  description?: string;
+  private?: boolean;
+}
+
+export interface CreateRepoResponse {
+  repo_url: string;
+  repo_name: string;
+  owner: string;
+}
+
 class GithubService {
   /**
    * Get GitHub connection status
@@ -47,6 +60,18 @@ class GithubService {
       "/api/v1/github/oauth/authorize"
     );
     return response.data.url;
+  }
+
+  /**
+   * Create a GitHub repository for a notebook and push code
+   */
+  async createRepo(data: CreateRepoRequest): Promise<CreateRepoResponse> {
+    const api = getApiClient();
+    const response = await api.post<CreateRepoResponse>(
+      "/api/v1/github/create-repo",
+      data
+    );
+    return response.data;
   }
 
   /**
