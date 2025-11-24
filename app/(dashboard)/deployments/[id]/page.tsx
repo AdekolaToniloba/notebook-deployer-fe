@@ -150,6 +150,11 @@ export default function DeploymentDetailPage() {
     deployment.status.toLowerCase().includes("error") ||
     deployment.status.toLowerCase().includes("fail");
 
+  // FIX: Append /docs to the service URL if it exists
+  const serviceUrlWithDocs = deployment.service_url
+    ? `${deployment.service_url.replace(/\/$/, "")}/docs`
+    : null;
+
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto min-h-screen font-mono">
       {/* Header */}
@@ -200,13 +205,13 @@ export default function DeploymentDetailPage() {
             <h3 className="font-bold uppercase mb-4 flex items-center gap-2">
               <Globe className="h-5 w-5" /> Service Endpoint
             </h3>
-            {deployment.service_url ? (
+            {serviceUrlWithDocs ? (
               <div className="flex flex-col gap-4">
                 <div className="bg-gray-100 p-4 border-2 border-black break-all font-mono text-sm">
-                  {deployment.service_url}
+                  {serviceUrlWithDocs}
                 </div>
                 <Button
-                  onClick={() => window.open(deployment.service_url!, "_blank")}
+                  onClick={() => window.open(serviceUrlWithDocs, "_blank")}
                   className="bg-black text-white border-2 border-transparent hover:bg-white hover:text-black hover:border-black rounded-none font-bold w-full sm:w-auto"
                 >
                   VISIT LIVE APP <Globe className="ml-2 h-4 w-4" />
