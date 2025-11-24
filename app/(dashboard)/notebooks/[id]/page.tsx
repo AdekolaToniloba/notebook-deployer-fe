@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { notebookService } from "@/lib/api/services/notebooks.service";
 import Link from "next/link";
 import type { NotebookDetailResponse } from "@/lib/validations/notebook.schemas";
-import { ModelManager } from "@/components/features/notebooks/ModelManager";
+
 import { PushToGithubModal } from "@/components/features/github/PushToGithubModal";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -17,7 +17,6 @@ export default function NotebookDetailPage() {
 
   const isGithubConnected = useAuthStore((state) => state.isGithubConnected);
 
-  const deploymentId = 123;
   // Strict type
   const [notebook, setNotebook] = useState<NotebookDetailResponse | null>(null);
 
@@ -118,7 +117,6 @@ export default function NotebookDetailPage() {
       </div>
 
       {/* New Model Management Section */}
-      <ModelManager notebookId={notebookId} deploymentId={deploymentId} />
     </div>
   );
 }

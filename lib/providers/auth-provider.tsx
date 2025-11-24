@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuthStore } from "@/store/auth-store";
+import { authService } from "@/lib/api/services/auth.service";
 import { tokenManager } from "@/lib/auth/token-manager";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
+// Refresh interval: 28 minutes (in milliseconds)
+const REFRESH_INTERVAL = 28 * 60 * 1000;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
@@ -11,8 +15,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setInitialized = useAuthStore((state) => state.setInitialized);
   const isLoading = useAuthStore((state) => state.isLoading);
 
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopProactiveRefresh = useCallback(() => {
+    if (refreshTimerRef.current) {
+      clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+  }, []);
+
+  const startProactiveRefresh = useCallback(() => {
+    stopProactiveRefresh();
+
+    refreshTimerRef.current = setInterval(async () => {
+      if (tokenManager.isAuthenticated()) {
+        try {
+          await authService.refreshToken();
+          console.debug("Proactive token refresh successful");
+        } catch (err) {
+          console.warn("Proactive token refresh failed", err);
+        }
+      }
+    }, REFRESH_INTERVAL);
+  }, [stopProactiveRefresh]);
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
 
     const initAuth = async () => {
@@ -20,7 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (hasToken) {
         try {
           await fetchUser();
-        } catch (error) {
+          startProactiveRefresh();
+        } catch {
           tokenManager.clearTokens();
         }
       }
@@ -28,11 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, [fetchUser, setInitialized]);
 
-  // FIX: Do not return null. Return children immediately if we are on server
-  // or if we are just waiting for mount.
-  // The hydration warning is suppressed in layout.tsx anyway.
+    return () => {
+      stopProactiveRefresh();
+    };
+  }, [fetchUser, setInitialized, startProactiveRefresh, stopProactiveRefresh]);
+
   if (!isMounted) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-white">
@@ -44,7 +74,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      {/* Global Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-sm">
           <LoadingSpinner size="lg" />

@@ -21,6 +21,7 @@ import {
   type DeploymentDetailResponse,
 } from "@/lib/api/services/deployments.service";
 import { toasts } from "@/lib/toast-utils";
+import { ModelManager } from "@/components/features/notebooks/ModelManager"; // Import ModelManager
 
 // Define a consistent error type for API responses
 interface ApiError {
@@ -67,7 +68,6 @@ export default function DeploymentDetailPage() {
         const data = await deploymentService.getDeployment(deploymentId);
         setDeployment(data);
       } catch (error: unknown) {
-        // FIX: Use the 'error' variable
         toasts.general.error("Failed to load details", getErrorMessage(error));
         router.push("/deployments");
       } finally {
@@ -87,7 +87,6 @@ export default function DeploymentDetailPage() {
       toasts.general.success("Deployment deleted successfully");
       router.push("/deployments");
     } catch (error: unknown) {
-      // FIX: Use the 'error' variable
       toasts.general.error(
         "Failed to delete deployment",
         getErrorMessage(error)
@@ -101,17 +100,15 @@ export default function DeploymentDetailPage() {
     try {
       setIsActionLoading(true);
       const content = await deploymentService.downloadDeployment(deploymentId);
-      // Trigger download
-      const blob = new Blob([content], { type: "application/gzip" }); // Correct type for tar.gz
+      const blob = new Blob([content], { type: "application/gzip" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `deployment-${deploymentId}-source.tar.gz`;
       a.click();
-      window.URL.revokeObjectURL(url); // Clean up
+      window.URL.revokeObjectURL(url);
       toasts.general.success("Download started");
     } catch (error: unknown) {
-      // FIX: Use the 'error' variable
       toasts.general.error(
         "Failed to download artifacts",
         getErrorMessage(error)
@@ -127,7 +124,6 @@ export default function DeploymentDetailPage() {
       await deploymentService.reloadModel(deploymentId);
       toasts.general.success("Model reload triggered");
     } catch (error: unknown) {
-      // FIX: Use the 'error' variable
       toasts.general.error("Failed to reload model", getErrorMessage(error));
     } finally {
       setIsActionLoading(false);
@@ -142,7 +138,6 @@ export default function DeploymentDetailPage() {
     );
   if (!deployment) return null;
 
-  // Status helpers
   const isLive =
     deployment.status.toLowerCase() === "active" ||
     deployment.status.toLowerCase() === "deployed";
@@ -218,6 +213,13 @@ export default function DeploymentDetailPage() {
               </p>
             )}
           </div>
+
+          {/* --- MODEL MANAGEMENT SECTION --- */}
+          {/* We pass the notebook ID associated with this deployment */}
+          <ModelManager
+            notebookId={deployment.notebook_id}
+            deploymentId={deployment.id}
+          />
 
           {/* Logs */}
           <div className="border-2 border-black bg-[#1a1a1a] text-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">

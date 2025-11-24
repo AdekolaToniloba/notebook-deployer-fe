@@ -40,35 +40,20 @@ class AuthService {
 
     const api = getApiClient();
     const response = await api.post("/api/v1/auth/login", validated);
-    const parsed = tokenResponseSchema.parse(response.data) as Record<
-      string,
-      unknown
-    >;
+    const parsed = tokenResponseSchema.parse(response.data);
 
-    // Normalize token fields (support snake_case and camelCase)
-    const accessToken = String(
-      parsed["access_token"] ?? parsed["accessToken"] ?? ""
-    );
-    const refreshToken = String(
-      parsed["refresh_token"] ?? parsed["refreshToken"] ?? ""
-    );
-    const tokenType =
-      (typeof parsed["token_type"] === "string" &&
-        String(parsed["token_type"])) ||
-      (typeof parsed["tokenType"] === "string" &&
-        String(parsed["tokenType"])) ||
-      "Bearer";
+    const tokens = {
+      accessToken: parsed.access_token,
+      refreshToken: parsed.refresh_token, // <--- CRITICAL: Read from snake_case property
+      tokenType: parsed.token_type,
+    };
 
     // Store tokens securely (tokenManager expects { accessToken, refreshToken, tokenType })
-    tokenManager.setTokens({
-      accessToken,
-      refreshToken,
-      tokenType,
-    });
+    tokenManager.setTokens(tokens);
 
     // Return validated TokenResponse (use original zod-validated shape if you want)
     // if tokenResponseSchema defines a richer type, return that instead
-    return tokenResponseSchema.parse(response.data) as TokenResponse;
+    return parsed;
   }
 
   async getCurrentUser(): Promise<UserResponse> {
@@ -94,31 +79,15 @@ class AuthService {
   async refreshToken(): Promise<TokenResponse> {
     const api = getApiClient();
     const response = await api.post("/api/v1/auth/refresh");
-    const parsed = tokenResponseSchema.parse(response.data) as Record<
-      string,
-      unknown
-    >;
-
-    const accessToken = String(
-      parsed["access_token"] ?? parsed["accessToken"] ?? ""
-    );
-    const refreshToken = String(
-      parsed["refresh_token"] ?? parsed["refreshToken"] ?? ""
-    );
-    const tokenType =
-      (typeof parsed["token_type"] === "string" &&
-        String(parsed["token_type"])) ||
-      (typeof parsed["tokenType"] === "string" &&
-        String(parsed["tokenType"])) ||
-      "Bearer";
+    const parsed = tokenResponseSchema.parse(response.data);
 
     tokenManager.setTokens({
-      accessToken,
-      refreshToken,
-      tokenType,
+      accessToken: parsed.access_token,
+      refreshToken: parsed.refresh_token,
+      tokenType: parsed.token_type,
     });
 
-    return tokenResponseSchema.parse(response.data) as TokenResponse;
+    return parsed;
   }
 }
 
