@@ -1,10 +1,5 @@
 /**
  * API Error Types
- *
- * Why we need these:
- * - Avoid using 'any' type for errors
- * - Provide consistent error handling across the app
- * - Make error messages type-safe
  */
 
 /**
@@ -56,21 +51,17 @@ export function hasErrorResponse(
  * Extract error message from various error types
  */
 export function extractErrorMessage(error: unknown): string {
-  // Check if it's our ApiError type
   if (isApiError(error)) {
     return error.message;
   }
 
-  // Check if it's an axios error with response
   if (hasErrorResponse(error) && error.response?.data?.detail) {
     return error.response.data.detail;
   }
 
-  // Check if it's a basic Error
   if (error instanceof Error) {
     return error.message;
   }
 
-  // Fallback
   return "An unexpected error occurred";
 }

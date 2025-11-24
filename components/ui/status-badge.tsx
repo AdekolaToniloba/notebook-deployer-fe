@@ -1,31 +1,22 @@
 /**
  * Status Badge Component
- *
- * Displays status with appropriate color coding for builds, deployments, and pipelines.
- *
- * Design: Clean, minimal badges with subtle colors that match the technical aesthetic.
- * No flashy animations - just clear, readable status indicators.
  */
 
 import { cn } from "@/lib/utils";
 import type { BuildStatus } from "@/types/models/build.types";
 import type { DeploymentStatus } from "@/types/models/deployment.types";
-import type { PipelineStatus } from "@/types/models/pipeline.types";
 
 /**
  * Status Badge Props
  */
 interface StatusBadgeProps {
-  status: BuildStatus | DeploymentStatus | PipelineStatus | string;
+  status: BuildStatus | DeploymentStatus | string;
   type?: "build" | "deployment" | "pipeline";
   className?: string;
 }
 
 /**
  * Status configuration
- *
- * Maps status values to visual styles.
- * Colors are semantic and consistent across all status types.
  */
 const statusConfig = {
   // Build statuses
@@ -117,19 +108,10 @@ function StatusIndicator({ status }: { status: string }) {
 
 /**
  * Status Badge Component
- *
- * @example
- * ```tsx
- * <StatusBadge status="building" type="build" />
- * <StatusBadge status="deployed" type="deployment" />
- * <StatusBadge status="processing" type="pipeline" />
- * ```
  */
-export function StatusBadge({ status, type, className }: StatusBadgeProps) {
-  // Normalize status to lowercase for lookup
+export function StatusBadge({ status, className }: StatusBadgeProps) {
   const normalizedStatus = status.toLowerCase();
 
-  // Get configuration for this status, or fallback
   const config = statusConfig[
     normalizedStatus as keyof typeof statusConfig
   ] || {
@@ -141,11 +123,10 @@ export function StatusBadge({ status, type, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        // Base styles
         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border",
-        // Status-specific styles
+
         config.className,
-        // Custom className
+
         className
       )}
       title={config.description}
@@ -185,14 +166,4 @@ export function DeploymentStatusBadge({
   return (
     <StatusBadge status={status} type="deployment" className={className} />
   );
-}
-
-export function PipelineStatusBadge({
-  status,
-  className,
-}: {
-  status: PipelineStatus;
-  className?: string;
-}) {
-  return <StatusBadge status={status} type="pipeline" className={className} />;
 }

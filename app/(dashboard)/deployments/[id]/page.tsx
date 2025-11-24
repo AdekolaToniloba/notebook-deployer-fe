@@ -21,9 +21,19 @@ import {
   type DeploymentDetailResponse,
 } from "@/lib/api/services/deployments.service";
 import { toasts } from "@/lib/toast-utils";
-import { ModelManager } from "@/components/features/notebooks/ModelManager"; // Import ModelManager
+import { ModelManager } from "@/components/features/notebooks/ModelManager";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-// Define a consistent error type for API responses
 interface ApiError {
   message?: string;
   response?: {
@@ -44,7 +54,6 @@ export default function DeploymentDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false);
 
-  // Helper to get a user-friendly error message
   const getErrorMessage = (error: unknown): string => {
     const err = error as ApiError;
     if (typeof err.response?.data?.detail === "string") {
@@ -56,7 +65,6 @@ export default function DeploymentDetailPage() {
     return err.message || "An unknown error occurred.";
   };
 
-  // Fetch Data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -77,10 +85,7 @@ export default function DeploymentDetailPage() {
     fetchData();
   }, [deploymentId, router]);
 
-  // Actions
   const handleDelete = async () => {
-    if (!confirm("Are you sure? This will delete the deployment permanently."))
-      return;
     try {
       setIsActionLoading(true);
       await deploymentService.deleteDeployment(deploymentId);
@@ -146,7 +151,7 @@ export default function DeploymentDetailPage() {
     deployment.status.toLowerCase().includes("fail");
 
   return (
-    <div className="p-8 max-w-5xl mx-auto min-h-screen font-mono">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto min-h-screen font-mono">
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -157,10 +162,10 @@ export default function DeploymentDetailPage() {
         </Link>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase mb-2">
+            <h1 className="text-3xl md:text-4xl font-black uppercase mb-2 break-all">
               {deployment.name}
             </h1>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-500">
               <span className="flex items-center gap-1">
                 <Clock className="h-4 w-4" /> Created{" "}
                 {new Date(deployment.created_at).toLocaleDateString()}
@@ -170,7 +175,7 @@ export default function DeploymentDetailPage() {
             </div>
           </div>
           <div
-            className={`px-4 py-2 border-2 border-black font-bold uppercase flex items-center gap-2 ${
+            className={`px-4 py-2 border-2 border-black font-bold uppercase flex items-center gap-2 self-start md:self-auto ${
               isLive ? "bg-green-400" : isError ? "bg-red-400" : "bg-yellow-400"
             }`}
           >
@@ -189,7 +194,7 @@ export default function DeploymentDetailPage() {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Details */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-8 order-2 lg:order-1">
           {/* Service URL */}
           <div className="border-2 border-black bg-white p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <h3 className="font-bold uppercase mb-4 flex items-center gap-2">
@@ -197,7 +202,7 @@ export default function DeploymentDetailPage() {
             </h3>
             {deployment.service_url ? (
               <div className="flex flex-col gap-4">
-                <div className="bg-gray-100 p-4 border-2 border-black break-all">
+                <div className="bg-gray-100 p-4 border-2 border-black break-all font-mono text-sm">
                   {deployment.service_url}
                 </div>
                 <Button
@@ -214,8 +219,7 @@ export default function DeploymentDetailPage() {
             )}
           </div>
 
-          {/* --- MODEL MANAGEMENT SECTION --- */}
-          {/* We pass the notebook ID associated with this deployment */}
+          {/* Model Manager */}
           <ModelManager
             notebookId={deployment.notebook_id}
             deploymentId={deployment.id}
@@ -254,8 +258,8 @@ export default function DeploymentDetailPage() {
         </div>
 
         {/* Right Column: Actions */}
-        <div className="space-y-4">
-          <div className="border-2 border-black bg-gray-50 p-6">
+        <div className="space-y-4 order-1 lg:order-2">
+          <div className="border-2 border-black bg-gray-50 p-6 sticky top-24">
             <h3 className="font-bold uppercase mb-4">Actions</h3>
             <div className="space-y-3">
               <Button
@@ -277,13 +281,40 @@ export default function DeploymentDetailPage() {
               >
                 <Download className="mr-2 h-4 w-4" /> DOWNLOAD ARTIFACTS
               </Button>
-              <Button
-                onClick={handleDelete}
-                disabled={isActionLoading}
-                className="w-full justify-start border-2 border-red-600 bg-white text-red-600 hover:bg-red-600 hover:text-white rounded-none font-bold"
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> DELETE DEPLOYMENT
-              </Button>
+
+              {/* Delete with Alert Dialog */}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    disabled={isActionLoading}
+                    className="w-full justify-start border-2 border-red-600 bg-white text-red-600 hover:bg-red-600 hover:text-white rounded-none font-bold"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> DELETE DEPLOYMENT
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white rounded-none p-6 max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-mono font-black uppercase text-xl">
+                      Delete Deployment?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="font-mono text-gray-600 font-medium">
+                      This action cannot be undone. This will permanently shut
+                      down the service and delete all associated resources.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="mt-6 gap-3">
+                    <AlertDialogCancel className="font-mono font-bold border-2 border-black rounded-none hover:bg-gray-100 mt-0">
+                      CANCEL
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="font-mono font-bold bg-red-600 text-white border-2 border-black rounded-none hover:bg-red-700"
+                    >
+                      DELETE
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>

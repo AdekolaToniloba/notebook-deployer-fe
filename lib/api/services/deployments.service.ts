@@ -4,7 +4,6 @@ import getApiClient from "@/lib/api/client";
 import {
   deploymentResponseSchema,
   deploymentListResponseSchema,
-  deploymentCreateRequestSchema,
   trafficUpdateRequestSchema,
 } from "@/lib/validations/deployment.schemas";
 import type {
@@ -12,11 +11,11 @@ import type {
   DeploymentListItem,
   DeploymentConfig,
   TrafficConfig,
+  DeploymentStatus,
 } from "@/types/models/deployment.types";
 import type {
   DeploymentResponse,
   DeploymentListItemResponse,
-  DeploymentCreateRequest,
   TrafficUpdateRequest,
 } from "@/types/api/deployments.types";
 
@@ -246,10 +245,10 @@ class DeploymentService {
     return {
       id: data.id,
       notebookId: data.notebook_id,
-      // FIX: Map 'name' from API to 'serviceName' in domain model
+
       serviceName: data.name,
       serviceUrl: data.service_url,
-      status: data.status,
+      status: data.status as DeploymentStatus,
       errorMessage: data.error_message,
       createdAt: new Date(data.created_at),
     };

@@ -184,21 +184,11 @@ export const deploymentListItemSchema = z.object({
 
 /**
  * Deployment List Response Schema
- *
- * Validates GET /api/v1/deployments
- * and GET /api/v1/deployments/notebook/{notebook_id}
  */
 export const deploymentListResponseSchema = z.array(deploymentListItemSchema);
 
 /**
  * Deployment Create Request Schema
- *
- * Validates request body for POST /api/v1/deployments
- *
- * Why validate request?
- * - Catch errors before sending to API
- * - Better error messages
- * - Type safety
  */
 export const deploymentCreateRequestSchema = z.object({
   notebook_id: z.number().int().positive(),
@@ -211,8 +201,6 @@ export const deploymentCreateRequestSchema = z.object({
 
 /**
  * Traffic Update Request Schema
- *
- * Validates request body for POST /api/v1/deployments/{deployment_id}/traffic
  */
 export const trafficUpdateRequestSchema = z.object({
   revision_name: z.string().min(1, "Revision name is required"),

@@ -23,7 +23,6 @@ interface PushToGithubModalProps {
   notebookName: string;
 }
 
-// Shape of error from Axios/FastAPI
 interface ApiError {
   response?: {
     data?: {

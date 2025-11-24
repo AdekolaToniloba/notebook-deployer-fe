@@ -4,10 +4,28 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ProfileForm } from "@/components/dashboard/profile-form";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { Shield, Github, Unplug, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  Shield,
+  Github,
+  Unplug,
+  Loader2,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getApiClient } from "@/lib/api/client";
 import { handleError } from "@/lib/error-utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // --- Types ---
 interface GithubStatus {
@@ -38,13 +56,15 @@ function SettingsCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`border-2 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] ${color}`}
+      className={`border-2 border-black p-6 md:p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] ${color}`}
     >
       <div className="flex items-center gap-4 mb-6 border-b-2 border-black pb-4">
-        <div className="p-2 bg-black text-white">
+        <div className="p-2 bg-black text-white shrink-0">
           <Icon className="h-6 w-6" />
         </div>
-        <h2 className="text-2xl font-black uppercase">{title}</h2>
+        <h2 className="text-xl md:text-2xl font-black uppercase break-words">
+          {title}
+        </h2>
       </div>
       {children}
     </motion.div>
@@ -57,6 +77,7 @@ export default function SettingsPage() {
   const [githubUsername, setGithubUsername] = useState<string | null>(null);
   const [isLoadingGithub, setIsLoadingGithub] = useState(true);
   const [scopes, setScopes] = useState<GithubScopesResponse | null>(null);
+  const [disconnectLoading, setDisconnectLoading] = useState(false); // Local loading state
 
   // 1. Status Check
   const checkGithubStatus = async () => {
@@ -86,7 +107,6 @@ export default function SettingsPage() {
         return false;
       }
     } catch (error) {
-      // error variable was unused, now we use it implicitly or handle it
       console.error("Status check failed", error);
       setIsGithubConnected(false);
       return false;
@@ -141,10 +161,8 @@ export default function SettingsPage() {
 
   // 3. Disconnect
   const handleDisconnectGithub = async () => {
-    if (!confirm("Are you sure you want to disconnect GitHub?")) return;
-
     try {
-      setIsLoadingGithub(true);
+      setDisconnectLoading(true);
       const api = getApiClient();
       await api.post("/api/v1/github/disconnect");
       setIsGithubConnected(false);
@@ -153,7 +171,7 @@ export default function SettingsPage() {
     } catch (error) {
       handleError(error, "Failed to disconnect");
     } finally {
-      setIsLoadingGithub(false);
+      setDisconnectLoading(false);
     }
   };
 
@@ -163,13 +181,15 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-12 font-mono">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8 md:space-y-12 font-mono min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-5xl font-black uppercase mb-2">Settings</h1>
-        <p className="text-gray-500 font-bold">
+        <h1 className="text-3xl md:text-5xl font-black uppercase mb-2 break-words">
+          Settings
+        </h1>
+        <p className="text-gray-500 font-bold text-sm md:text-base">
           MANAGE YOUR PREFERENCES & INTEGRATIONS
         </p>
       </motion.div>
@@ -187,10 +207,12 @@ export default function SettingsPage() {
           </div>
         ) : isGithubConnected ? (
           <div className="space-y-6">
-            <div className="flex flex-col gap-2 bg-green-100 p-4 border-2 border-black">
+            <div className="flex flex-col gap-2 bg-green-100 p-4 border-2 border-black break-all">
               <div className="flex items-center gap-2 text-green-700 font-black">
-                <CheckCircle2 className="h-6 w-6" />
-                CONNECTED AS {githubUsername?.toUpperCase()}
+                <CheckCircle2 className="h-6 w-6 flex-shrink-0" />
+                <span className="truncate">
+                  CONNECTED AS {githubUsername?.toUpperCase()}
+                </span>
               </div>
 
               {/* Scopes Display */}
@@ -208,8 +230,9 @@ export default function SettingsPage() {
                     ))}
                   </div>
                   {scopes.needs_reauth && (
-                    <div className="mt-2 text-red-600 animate-pulse">
-                      ⚠️ RE-AUTHENTICATION REQUIRED
+                    <div className="mt-2 text-red-600 animate-pulse flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" /> RE-AUTHENTICATION
+                      REQUIRED
                     </div>
                   )}
                 </div>
@@ -222,12 +245,45 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            <Button
-              onClick={handleDisconnectGithub}
-              className="bg-red-600 text-white border-2 border-black hover:bg-red-700 rounded-none font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all"
-            >
-              <Unplug className="mr-2 h-4 w-4" /> DISCONNECT ACCOUNT
-            </Button>
+            {/* Disconnect Button with Alert Dialog */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  disabled={disconnectLoading}
+                  className="w-full md:w-auto bg-red-600 text-white border-2 border-black hover:bg-red-700 rounded-none font-bold shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all"
+                >
+                  {disconnectLoading ? (
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                  ) : (
+                    <Unplug className="mr-2 h-4 w-4" />
+                  )}
+                  DISCONNECT ACCOUNT
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white rounded-none p-6 max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-mono font-black uppercase text-xl">
+                    Disconnect GitHub?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="font-mono text-gray-600 font-medium">
+                    This will disconnect your GitHub account and stop automatic
+                    deployments from your repositories. Existing deployments
+                    will remain active.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="mt-6 gap-3">
+                  <AlertDialogCancel className="font-mono font-bold border-2 border-black rounded-none hover:bg-gray-100 mt-0">
+                    CANCEL
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDisconnectGithub}
+                    className="font-mono font-bold bg-red-600 text-white border-2 border-black rounded-none hover:bg-red-700"
+                  >
+                    YES, DISCONNECT
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         ) : (
           <div className="space-y-4">
@@ -236,7 +292,7 @@ export default function SettingsPage() {
             </p>
             <Button
               onClick={handleConnectGithub}
-              className="bg-black text-white border-2 border-transparent hover:bg-white hover:text-black hover:border-black rounded-none font-bold h-12 px-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all"
+              className="w-full md:w-auto bg-black text-white border-2 border-transparent hover:bg-white hover:text-black hover:border-black rounded-none font-bold h-12 px-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:translate-x-1 hover:shadow-none transition-all"
             >
               <Github className="mr-2 h-5 w-5" /> CONNECT GITHUB
             </Button>

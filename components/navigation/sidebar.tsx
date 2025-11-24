@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -29,8 +28,6 @@ export function Sidebar({ items }: SidebarProps) {
               href={item.href}
               className="block relative group"
             >
-              {/* ACTIVE STATE: bg-black, text-white */}
-              {/* INACTIVE STATE: bg-transparent, text-gray-500 */}
               <motion.div
                 className={`relative z-10 flex items-center gap-3 border-2 px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide transition-all
                   ${
@@ -40,7 +37,6 @@ export function Sidebar({ items }: SidebarProps) {
                   }
                 `}
               >
-                {/* Icon Color Logic: If active, white. If inactive, gray (hover black) */}
                 <span
                   className={`${
                     isActive
@@ -52,8 +48,6 @@ export function Sidebar({ items }: SidebarProps) {
                 </span>
                 {item.label}
               </motion.div>
-
-              {/* Background Shadow Block (Only needed for visual depth if using transparency, but here we use solid colors) */}
             </Link>
           );
         })}

@@ -106,73 +106,38 @@ export interface Deployment {
 
 /**
  * Deployment List Item
- *
- * Simplified deployment info for list views.
- *
- * Why simplified?
- * - Only essential fields for lists
- * - Faster to render
- * - Detail view loads full data
+
  */
 export interface DeploymentListItem {
   id: number;
   notebookId: number;
   serviceName: string;
   serviceUrl: string | null;
-  status: DeploymentStatus;
+  status: string;
   errorMessage: string | null;
   createdAt: Date;
 }
 
 /**
  * Deployment Create Parameters
- *
- * What we need to create a deployment.
- *
- * Why?
- * - Type-safe deployment creation
- * - Optional config (uses defaults)
- * - buildId optional (can deploy existing image)
+
  */
 export interface DeploymentCreateParams {
   notebookId: number;
-  buildId?: number; // Optional if deploying existing image
-  config?: Partial<DeploymentConfig>; // Optional, uses defaults
+  buildId?: number;
+  config?: Partial<DeploymentConfig>;
 }
 
 /**
  * Traffic Configuration
- *
- * For A/B testing and gradual rollouts.
- *
- * Why traffic management?
- * - Test new versions with small percentage
- * - Gradual rollout reduces risk
- * - Instant rollback if issues
- *
- * Example:
- * - Revision A: 90% traffic
- * - Revision B: 10% traffic (new version)
  */
 export interface TrafficConfig {
-  revisionName: string; // Which revision to route to
-  trafficPercent: number; // 0-100
+  revisionName: string;
+  trafficPercent: number;
 }
 
 /**
  * Deployment Revision
- *
- * A specific version of a deployment.
- *
- * Why revisions?
- * - Each deploy creates new revision
- * - Can route traffic between revisions
- * - Can rollback to previous revision
- *
- * Example flow:
- * 1. Deploy v1 (revision-001) → 100% traffic
- * 2. Deploy v2 (revision-002) → 10% traffic
- * 3. Increase to 100% if good, or rollback
  */
 export interface DeploymentRevision {
   revisionName: string;
@@ -184,13 +149,6 @@ export interface DeploymentRevision {
 
 /**
  * Deployment with Config
- *
- * Deployment + its configuration.
- *
- * Why combined?
- * - Detail view needs both
- * - Edit form needs current config
- * - Complete picture of deployment
  */
 export interface DeploymentWithConfig extends Deployment {
   config: DeploymentConfig;
@@ -198,31 +156,22 @@ export interface DeploymentWithConfig extends Deployment {
 
 /**
  * Deployment Statistics
- *
- * Aggregated stats for dashboard.
- *
- * Why?
- * - Track deployment success rate
- * - Monitor active deployments
- * - Identify problem notebooks
  */
 export interface DeploymentStatistics {
   totalDeployments: number;
-  activeDeployments: number; // Currently deployed
+  activeDeployments: number;
   failedDeployments: number;
-  averageDeployTime: number; // Seconds
-  successRate: number; // Percentage (0-100)
+  averageDeployTime: number;
+  successRate: number;
 }
 
 /**
  * Deployment Filter Options
- *
- * For filtering deployment lists.
  */
 export interface DeploymentFilters {
   status?: DeploymentStatus[];
   notebookId?: number;
-  searchQuery?: string; // Search by service name or URL
+  searchQuery?: string;
   sortBy?: "created" | "deployed" | "name";
   sortOrder?: "asc" | "desc";
 }
@@ -243,8 +192,6 @@ export interface DeploymentPagination {
 
 /**
  * Deployment with UI State
- *
- * Adds UI-specific state to deployment data.
  */
 export interface DeploymentWithUIState extends DeploymentListItem {
   isUpdatingTraffic?: boolean;
@@ -255,30 +202,26 @@ export interface DeploymentWithUIState extends DeploymentListItem {
 
 /**
  * Deployment Action Types
- *
- * Available actions for deployments.
  */
 export type DeploymentAction =
-  | "viewUrl" // Open service URL in new tab
-  | "updateTraffic" // Update traffic distribution
-  | "rollback" // Rollback to previous revision
-  | "viewLogs" // View Cloud Run logs
-  | "viewMetrics" // View Cloud Run metrics
-  | "delete"; // Delete deployment
+  | "viewUrl"
+  | "updateTraffic"
+  | "rollback"
+  | "viewLogs"
+  | "viewMetrics"
+  | "delete";
 
 /**
  * Deployment Error Types
- *
- * Categorized errors for better UX.
  */
 export type DeploymentErrorType =
-  | "quota" // Quota exceeded
-  | "permissions" // Permission denied
-  | "config" // Invalid configuration
-  | "image" // Image not found or invalid
-  | "timeout" // Deployment timeout
-  | "network" // Network issues
-  | "unknown"; // Unexpected error
+  | "quota"
+  | "permissions"
+  | "config"
+  | "image"
+  | "timeout"
+  | "network"
+  | "unknown";
 
 export interface DeploymentError {
   type: DeploymentErrorType;
@@ -289,37 +232,23 @@ export interface DeploymentError {
 
 /**
  * Deployment Health
- *
- * Health status of a deployment.
- *
- * Why?
- * - Monitor if service is responding
- * - Alert if unhealthy
- * - Show health in UI
  */
 export interface DeploymentHealth {
   deploymentId: number;
   isHealthy: boolean;
   lastChecked: Date;
-  responseTime: number | null; // milliseconds
-  errorRate: number; // Percentage (0-100)
-  uptime: number; // Percentage (0-100)
+  responseTime: number | null;
+  errorRate: number;
+  uptime: number;
 }
 
 /**
  * Deployment Metrics
- *
- * Performance metrics for a deployment.
- *
- * Why?
- * - Track request volume
- * - Monitor performance
- * - Identify bottlenecks
  */
 export interface DeploymentMetrics {
   deploymentId: number;
   requestCount: number;
-  averageLatency: number; // milliseconds
+  averageLatency: number;
   errorCount: number;
   activeInstances: number;
   periodStart: Date;
@@ -328,13 +257,6 @@ export interface DeploymentMetrics {
 
 /**
  * CPU and Memory Presets
- *
- * Common configurations users can choose from.
- *
- * Why presets?
- * - Simplifies configuration
- * - Proven combinations
- * - Easy to understand (small, medium, large)
  */
 export const DEPLOYMENT_PRESETS: Record<
   string,
@@ -380,31 +302,18 @@ export const DEPLOYMENT_PRESETS: Record<
 
 /**
  * CPU Options
- *
- * Valid CPU values for Cloud Run.
  */
 export const CPU_OPTIONS = ["1", "2", "4"] as const;
 export type CpuOption = (typeof CPU_OPTIONS)[number];
 
 /**
  * Memory Options
- *
- * Valid memory values for Cloud Run.
- * Must be compatible with CPU choice.
  */
 export const MEMORY_OPTIONS = ["512Mi", "1Gi", "2Gi", "4Gi", "8Gi"] as const;
 export type MemoryOption = (typeof MEMORY_OPTIONS)[number];
 
 /**
  * CPU/Memory Compatibility
- *
- * Not all combinations are valid.
- * Cloud Run has rules about CPU/memory ratios.
- *
- * Why enforce?
- * - Prevent invalid configurations
- * - Better UX (only show valid options)
- * - Avoid deployment errors
  */
 export const VALID_CPU_MEMORY_COMBINATIONS: Record<CpuOption, MemoryOption[]> =
   {

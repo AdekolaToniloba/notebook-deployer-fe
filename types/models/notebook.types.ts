@@ -2,26 +2,19 @@
 
 /**
  * Domain Models for Notebooks
- *
- * These are what our application uses internally.
- * Differences from API types:
- * - camelCase instead of snake_case (React/TS convention)
- * - No nullable fields where we provide defaults
- * - Additional computed properties
- * - Better organized for UI needs
  */
 
 /**
- * Notebook status - same as API but typed nicely
+ * Notebook status
  */
 export type NotebookStatus =
-  | "uploaded" // Just uploaded, not yet parsed
-  | "pending" // Waiting to parse (legacy)
-  | "parsing" // Currently being parsed
-  | "parsed" // Successfully parsed, dependencies extracted
-  | "parse_failed" // Parse failed - notebook has syntax errors or invalid format
-  | "ready" // Parsed successfully, ready for build (legacy - same as parsed)
-  | "error"; // Generic error (legacy)
+  | "uploaded"
+  | "pending"
+  | "parsing"
+  | "parsed"
+  | "parse_failed"
+  | "ready"
+  | "error";
 
 /**
  * Main Notebook model
@@ -53,7 +46,6 @@ export interface Notebook {
 
 /**
  * Simplified notebook for list views
- * Only the essential info needed in lists
  */
 export interface NotebookListItem {
   id: number;
@@ -67,7 +59,6 @@ export interface NotebookListItem {
 
 /**
  * Upload result
- * What we get immediately after upload
  */
 export interface NotebookUpload {
   id: number;
@@ -79,7 +70,6 @@ export interface NotebookUpload {
 
 /**
  * Parse result
- * What we get after parsing completes
  */
 export interface NotebookParseResult {
   id: number;
@@ -108,7 +98,6 @@ export interface NotebookFile {
 
 /**
  * Notebook with UI state
- * Used in components to track loading states per notebook
  */
 export interface NotebookWithUIState extends NotebookListItem {
   isDeleting?: boolean;
@@ -127,7 +116,6 @@ export interface NotebookFilters {
 
 /**
  * Pagination info
- * For when we add pagination later
  */
 export interface NotebookPagination {
   page: number;

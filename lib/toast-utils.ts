@@ -183,12 +183,6 @@ export const pipelineToasts = {
   /**
    * Pipeline started
    */
-  started: (pipelineId: string, notebookId: number) => {
-    toast.info("Deployment Pipeline Started", {
-      ...toastConfig,
-      description: "Building and deploying your notebook",
-    });
-  },
 
   /**
    * Pipeline completed successfully

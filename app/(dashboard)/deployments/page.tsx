@@ -15,9 +15,8 @@ import {
 
 import { deploymentService } from "@/lib/api/services/deployments.service";
 import { toasts } from "@/lib/toast-utils";
-import type { DeploymentListItem } from "@/types/models/deployment.types"; // Import Domain Model
+import type { DeploymentListItem } from "@/types/models/deployment.types";
 
-// Status configuration for UI
 const statusConfig: Record<
   string,
   { icon: React.ElementType; color: string; label: string }

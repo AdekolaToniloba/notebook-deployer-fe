@@ -1,5 +1,3 @@
-import { toast } from "sonner";
-
 export function handleError(
   error: unknown,
   context: string = "An error occurred"
