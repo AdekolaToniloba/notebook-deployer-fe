@@ -44,9 +44,9 @@ jobs:
           tags: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
 
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
-            NEXT_PUBLIC_APP_NAME=${{ vars.NEXT_PUBLIC_APP_NAME }}
-            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+            NEXT_PUBLIC_API_URL=https://codematics-be-860155021919.us-central1.run.app
+            NEXT_PUBLIC_APP_NAME=NotebookCloud
+            NEXT_PUBLIC_APP_URL=https://aether-860155021919.us-central1.run.app
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
