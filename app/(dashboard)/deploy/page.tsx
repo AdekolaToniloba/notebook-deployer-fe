@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react"; // Removed useEffect
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,16 +10,17 @@ import {
   Loader2,
   CheckCircle2,
   Globe,
+  Terminal as TerminalIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { notebookService } from "@/lib/api/services/notebooks.service";
 import { deploymentService } from "@/lib/api/services/deployments.service";
 import { toasts } from "@/lib/toast-utils";
+import { LogTerminal } from "@/components/deployments/log-terminal"; // Import the terminal
 
 // --- Types ---
 type DeployStep = "upload" | "config" | "deploying";
 
-// Define specific error type structure for Axios/FastAPI
 interface ApiErrorResponse {
   response?: {
     data?: {
@@ -70,9 +71,10 @@ export default function DeployPage() {
 
   // Process State
   const [notebookId, setNotebookId] = useState<number | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
+  const [deploymentId, setDeploymentId] = useState<number | null>(null); // Track created deployment ID
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState("Initializing..."); // Simple status text above terminal
 
   // Handle File Inputs
   const handleFileChange = (
@@ -91,49 +93,29 @@ export default function DeployPage() {
 
     setStep("deploying");
     setIsDeploying(true);
-    setLogs(["Initializing deployment pipeline..."]);
+    setStatusMessage("Uploading assets...");
 
     try {
       // --- STEP 1: UPLOAD ---
-      setLogs((prev) => [...prev, ">> STEP 1/4: Uploading assets..."]);
       const notebook = await notebookService.uploadNotebook(
         notebookFile,
         modelFile
       );
       setNotebookId(notebook.id);
-      setLogs((prev) => [
-        ...prev,
-        `✓ Upload successful (Notebook #${notebook.id})`,
-      ]);
+      setStatusMessage("Parsing notebook structure...");
 
       // --- STEP 2: PARSE ---
-      setLogs((prev) => [
-        ...prev,
-        ">> STEP 2/4: Parsing notebook structure...",
-      ]);
       await notebookService.parseNotebook(notebook.id);
-      setLogs((prev) => [
-        ...prev,
-        "✓ Parsing complete. Dependencies extracted.",
-      ]);
+      setStatusMessage("Running AI Security Analysis...");
 
       // --- STEP 3: ANALYZE ---
-      setLogs((prev) => [
-        ...prev,
-        ">> STEP 3/4: Running AI Security Analysis (Gemini)...",
-      ]);
       const analysis = await notebookService.analyzeNotebook(notebook.id);
-      setLogs((prev) => [
-        ...prev,
-        `✓ Analysis complete. Health Score: ${analysis.health_score}/100`,
-      ]);
-
       if (analysis.health_score < 50) {
-        setLogs((prev) => [...prev, "⚠ Warning: Low health score detected."]);
+        toasts.general.warning("Low Health Score", "Proceeding with caution.");
       }
 
-      // --- STEP 4: DEPLOY ---
-      setLogs((prev) => [...prev, `>> STEP 4/4: Deploying to ${region}...`]);
+      // --- STEP 4: CREATE DEPLOYMENT ---
+      setStatusMessage(`Initiating Cloud Build in ${region}...`);
 
       const deployment = await deploymentService.createDeployment({
         notebookId: notebook.id,
@@ -143,45 +125,43 @@ export default function DeployPage() {
         },
       });
 
-      setLogs((prev) => [
-        ...prev,
-        "✓ Deployment pipeline triggered.",
-        "Waiting for Cloud Build...",
-      ]);
+      // Set ID to trigger the LogTerminal
+      setDeploymentId(deployment.id);
+      setStatusMessage("Build in progress. Streaming logs...");
 
       if (deployment.serviceUrl) {
+        // Immediate success (rare for async builds, but possible)
         setDeploymentUrl(deployment.serviceUrl);
         toasts.deployment.success(deployment.id, deployment.serviceUrl);
-        setLogs((prev) => [...prev, "🚀 SERVICE IS LIVE!"]);
+        setIsDeploying(false);
+        setStatusMessage("Deployment Complete!");
       } else {
-        setLogs((prev) => [...prev, "✓ Build queued in background."]);
+        // Async build started - The LogTerminal will handle showing the progress
         toasts.general.info(
-          "Deployment Queued",
-          "Check the deployments page for status updates."
+          "Build Started",
+          "Streaming build logs from Cloud Run..."
         );
-        setTimeout(() => router.push("/deployments"), 3000);
+
+        // Optional: Poll or wait for terminal to show completion (or just let user watch)
+        // In a real app, you might want to poll status here to update the "Open API" button
+        // But for this flow, we'll let them watch the logs.
       }
     } catch (error: unknown) {
-      // FIX: Use proper type narrowing instead of 'any'
       const err = error as ApiErrorResponse;
-
       let message = "Unknown error";
 
       if (err.response?.data?.detail) {
         if (Array.isArray(err.response.data.detail)) {
-          // Pydantic validation error
           message = err.response.data.detail[0]?.msg || message;
         } else {
-          // Generic string detail
           message = err.response.data.detail;
         }
       } else if (err.message) {
         message = err.message;
       }
 
-      setLogs((prev) => [...prev, `❌ ERROR: ${message}`]);
+      setStatusMessage("Deployment Failed.");
       toasts.general.error("Pipeline Failed", message);
-    } finally {
       setIsDeploying(false);
     }
   };
@@ -194,7 +174,7 @@ export default function DeployPage() {
         </h1>
         <StepIndicator step={step} />
 
-        <div className="border-2 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 min-h-[500px] relative">
+        <div className="border-2 border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 min-h-[600px] relative flex flex-col">
           <AnimatePresence mode="wait">
             {/* STEP 1: UPLOAD */}
             {step === "upload" && (
@@ -337,22 +317,22 @@ export default function DeployPage() {
               </motion.div>
             )}
 
-            {/* STEP 3: DEPLOYING */}
+            {/* STEP 3: DEPLOYING (TERMINAL VIEW) */}
             {step === "deploying" && (
               <motion.div
                 key="deploying"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="h-full flex flex-col"
+                className="h-full flex flex-col flex-1"
               >
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-mono text-2xl font-bold uppercase flex items-center gap-2">
                     {isDeploying ? (
                       <Loader2 className="animate-spin h-6 w-6" />
                     ) : (
-                      <CheckCircle2 className="text-green-600 h-6 w-6" />
+                      <TerminalIcon className="text-green-600 h-6 w-6" />
                     )}
-                    {isDeploying ? "Deploying..." : "Deployment Complete"}
+                    {statusMessage}
                   </h2>
                   {notebookId && (
                     <span className="text-xs font-mono text-gray-500">
@@ -360,19 +340,39 @@ export default function DeployPage() {
                     </span>
                   )}
                 </div>
-                <div className="flex-1 bg-[#1a1a1a] p-4 font-mono text-sm text-green-400 h-[300px] overflow-y-auto border-2 border-black shadow-inner">
-                  {logs.map((log, i) => (
-                    <div key={i} className="mb-1">
-                      {log}
-                    </div>
-                  ))}
-                  {isDeploying && <div className="animate-pulse">_</div>}
-                </div>
+
+                {/* 
+                   Show terminal only after deployment is created (ID exists).
+                   Before that, show a placeholder or earlier steps logs if you wanted to keep them.
+                   For now, we switch to this view when creating the deployment.
+                */}
+                {deploymentId ? (
+                  <div className="flex-1 min-h-[400px]">
+                    <LogTerminal
+                      deploymentId={deploymentId}
+                      autoStream={true} // Enable auto-streaming immediately
+                      className="h-full w-full"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-1 min-h-[400px] border-2 border-black bg-gray-100 flex items-center justify-center flex-col gap-4">
+                    <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
+                    <p className="font-mono font-bold text-gray-500">
+                      Preparing Build Environment...
+                    </p>
+                  </div>
+                )}
+
+                {/* Success State / Deployment URL */}
                 {deploymentUrl && (
-                  <div className="mt-6 p-4 bg-green-100 border-2 border-black flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-green-100 border-2 border-black flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                  >
                     <div className="flex-1">
                       <p className="font-bold font-mono text-xs text-gray-500 mb-1">
-                        API ENDPOINT
+                        API ENDPOINT READY
                       </p>
                       <a
                         href={deploymentUrl}
@@ -389,6 +389,18 @@ export default function DeployPage() {
                       className="bg-black text-white font-mono font-bold rounded-none border-2 border-transparent hover:border-black hover:bg-white hover:text-black transition-all whitespace-nowrap"
                     >
                       OPEN API
+                    </Button>
+                  </motion.div>
+                )}
+
+                {!isDeploying && !deploymentUrl && (
+                  <div className="mt-6 flex justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={() => router.push("/deployments")}
+                      className="font-mono font-bold"
+                    >
+                      GO TO DASHBOARD
                     </Button>
                   </div>
                 )}

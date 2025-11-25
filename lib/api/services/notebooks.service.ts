@@ -19,6 +19,7 @@ import type {
   NotebookDetailResponse,
   FileContentResponse,
 } from "@/types/api/notebooks.types";
+import { APP_CONFIG } from "@/lib/config";
 
 export interface NotebookAnalyzeResponse {
   id: number;
@@ -56,7 +57,7 @@ class NotebookService {
           ).tokenManager.getAccessToken()
         : null;
 
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || "";
+    const baseURL = APP_CONFIG.API_URL || "";
 
     const response = await fetch(`${baseURL}/api/v1/notebooks/upload`, {
       method: "POST",

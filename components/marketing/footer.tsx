@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { Github, Twitter, Linkedin } from "lucide-react";
+import { AetherLogo } from "@/components/branding/aether-logo"; // Import the logo
 
 export function Footer() {
   return (
@@ -7,15 +10,11 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 border-2 border-black bg-[#B6DFF]" />
-              <span className="font-mono text-xl font-bold uppercase">
-                NotebookDeploy
-              </span>
-            </div>
+            {/* Use the minimal logo variant for the footer */}
+            <AetherLogo variant="minimal" size="md" className="mb-4" />
             <p className="font-mono text-sm text-gray-600 max-w-xs">
-              Turn your Jupyter Notebooks into production APIs in seconds. No
-              config required.
+              The fastest way to deploy Jupyter Notebooks as scalable production
+              APIs.
             </p>
           </div>
 
@@ -69,8 +68,8 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-12 border-t-2 border-black pt-8 font-mono text-xs text-gray-500 flex justify-between">
-          <p>&copy; 2025 NotebookDeploy Inc.</p>
-          <p>BUILT FOR BUILDERS</p>
+          <p>&copy; {new Date().getFullYear()} Aether Industries Inc.</p>
+          <p>FORGED IN THE CLOUD</p>
         </div>
       </div>
     </footer>

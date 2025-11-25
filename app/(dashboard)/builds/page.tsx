@@ -4,7 +4,6 @@ import { motion, type Variants } from "framer-motion";
 import { Construction, ArrowRight, Mail } from "lucide-react";
 import Link from "next/link";
 
-// FIX: Added explicit type annotation
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -16,7 +15,6 @@ const containerVariants: Variants = {
   },
 };
 
-// FIX: Added explicit type annotation
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
@@ -84,10 +82,9 @@ export default function BuildsPage() {
           variants={itemVariants}
           className="text-sm md:text-lg font-mono font-bold text-gray-500 mb-8 md:mb-12 max-w-lg mx-auto leading-relaxed"
         >
-          {/* FIX: Escaped single quote */}
           We&apos;re hammering out the final details for our advanced build
-          pipeline visualization. Expect real-time logs, detailed metrics, and
-          more.
+          pipeline visualization. For now, you can view build logs directly on
+          your specific deployment pages.
         </motion.p>
 
         {/* Progress Bar Visual */}
@@ -102,9 +99,8 @@ export default function BuildsPage() {
             transition={{ duration: 1.5, ease: "easeInOut", delay: 0.5 }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-full h-[1px] bg-transparent" /> {/* Spacer */}
+            <div className="w-full h-[1px] bg-transparent" />
           </div>
-          {/* Striped overlay */}
           <div
             className="absolute inset-0 opacity-20"
             style={{
@@ -120,11 +116,11 @@ export default function BuildsPage() {
           variants={itemVariants}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Link href="/dashboard" className="w-full sm:w-auto">
+          <Link href="/deployments" className="w-full sm:w-auto">
             <div className="group relative w-full sm:w-auto">
               <div className="absolute inset-0 translate-x-1 translate-y-1 bg-black transition-transform group-hover:translate-x-2 group-hover:translate-y-2" />
               <div className="relative border-2 border-black bg-white px-8 py-3 font-mono font-bold text-sm uppercase hover:-translate-y-1 transition-transform flex items-center justify-center gap-2">
-                <ArrowRight className="w-4 h-4 rotate-180" /> Back to Dashboard
+                <ArrowRight className="w-4 h-4 rotate-180" /> Go to Deployments
               </div>
             </div>
           </Link>

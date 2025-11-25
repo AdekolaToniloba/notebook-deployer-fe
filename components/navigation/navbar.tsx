@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { UserDropdown } from "@/components/navigation/user-dropdown";
+import { AetherLogo } from "@/components/branding/aether-logo"; // Import new logo
 import {
   Bell,
   Menu,
@@ -19,6 +20,7 @@ import {
   LogOut,
 } from "lucide-react";
 
+// ... [Keep existing nav items arrays] ...
 const marketingNavItems = [
   { label: "Features", href: "/features" },
   { label: "Pricing", href: "/pricing" },
@@ -40,7 +42,6 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isActive = useCallback((href: string) => pathname === href, [pathname]);
-
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   const handleLogout = async () => {
@@ -49,29 +50,15 @@ export function Navbar() {
     router.push("/");
   };
 
-  // Helper to get user initial
   const avatarLetter = user?.username?.[0]?.toUpperCase() || "U";
 
   return (
     <nav className="sticky top-0 z-50 border-b-2 border-black bg-white">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Logo */}
-        <Link
-          href={isAuthenticated ? "/dashboard" : "/"}
-          className="flex items-center gap-2 group"
-        >
-          <motion.div
-            className="flex h-10 w-10 items-center justify-center border-2 border-black bg-[#B6DFF] shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-            whileHover={{
-              translate: "2px 2px",
-              boxShadow: "0px 0px 0px 0px rgba(0,0,0,1)",
-            }}
-          >
-            <span className="font-mono text-lg font-bold text-black">ND</span>
-          </motion.div>
-          <span className="font-mono text-xl font-bold uppercase tracking-tighter text-black group-hover:underline decoration-2 underline-offset-4">
-            NotebookDeploy
-          </span>
+        {/* Updated Logo Integration */}
+        <Link href={isAuthenticated ? "/dashboard" : "/"} className="group">
+          {/* Use 'static' for navbar to keep it readable but stylized, or 'wild' for fun */}
+          <AetherLogo variant="static" size="sm" />
         </Link>
 
         {/* Desktop Nav - Marketing */}
@@ -144,7 +131,6 @@ export function Navbar() {
                 </Button>
               </Link>
 
-              {/* Mobile Toggle for Non-Auth */}
               <button
                 className="md:hidden border-2 border-black p-2 active:bg-gray-100"
                 onClick={toggleMobileMenu}
@@ -161,7 +147,7 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay (Preserved Existing Logic) */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -173,9 +159,7 @@ export function Navbar() {
           >
             <div className="p-6 space-y-6">
               {isAuthenticated ? (
-                // App Navigation for Mobile
                 <div className="grid gap-4">
-                  {/* User Info Section */}
                   <div className="flex items-center gap-4 pb-4 border-b-2 border-black border-dashed">
                     <div className="h-12 w-12 bg-[#FFDE59] border-2 border-black flex items-center justify-center font-mono font-bold text-xl">
                       {avatarLetter}
@@ -212,7 +196,6 @@ export function Navbar() {
                     );
                   })}
 
-                  {/* Sign Out Button */}
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-3 p-3 border-2 border-red-600 text-red-600 hover:bg-red-50 transition-all font-mono font-bold uppercase mt-2"
@@ -222,7 +205,6 @@ export function Navbar() {
                   </button>
                 </div>
               ) : (
-                // Marketing Navigation for Mobile
                 <div className="space-y-4">
                   {marketingNavItems.map((item) => (
                     <Link

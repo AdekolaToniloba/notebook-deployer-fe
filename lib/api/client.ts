@@ -3,12 +3,14 @@ import axios, {
   AxiosInstance,
   AxiosResponse,
   InternalAxiosRequestConfig,
+  AxiosRequestConfig,
 } from "axios";
 import { tokenManager } from "@/lib/auth/token-manager";
 import {
   tokenResponseSchema,
   type TokenResponse,
 } from "@/lib/validations/auth.schemas";
+import { APP_CONFIG } from "@/lib/config";
 
 export class ApiError extends Error {
   constructor(message: string, public status?: number, public data?: unknown) {
@@ -36,7 +38,7 @@ export class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL,
+      baseURL: APP_CONFIG.API_URL,
       timeout: 30_000,
       withCredentials: true,
     });
@@ -130,7 +132,7 @@ export class ApiClient {
     }
 
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`,
+      `${APP_CONFIG.API_URL}/api/v1/auth/refresh`,
       { refresh_token: currentRefreshToken },
       {
         headers: { "Content-Type": "application/json" },
@@ -138,7 +140,6 @@ export class ApiClient {
       }
     );
 
-    // FIX: Explicitly type the parsed response using the imported TokenResponse type
     const parsed: TokenResponse = tokenResponseSchema.parse(response.data);
 
     const tokens: TokenPair = {
@@ -151,16 +152,13 @@ export class ApiClient {
     return tokens;
   }
 
-  // FIX: Changed AxiosError<any> to AxiosError<unknown> or a stricter type
   private transformError(error: AxiosError<unknown>): ApiError {
-    // Safely cast the data to a known shape or check properties
     const data = error.response?.data as Record<string, unknown> | undefined;
     let message = error.message;
 
     if (data) {
       if (typeof data.detail === "string") message = data.detail;
       else if (Array.isArray(data.detail) && data.detail.length > 0) {
-        // Assuming standard FastAPI validation error shape
         const firstError = data.detail[0] as { msg?: string } | undefined;
         message = firstError?.msg || "Validation error";
       }
@@ -170,24 +168,24 @@ export class ApiClient {
   }
 
   // Wrapper methods...
-  public get<T = unknown>(url: string, config?: InternalAxiosRequestConfig) {
+  public get<T = unknown>(url: string, config?: AxiosRequestConfig) {
     return this.client.get<T>(url, config);
   }
   public post<T = unknown, D = unknown>(
     url: string,
     data?: D,
-    config?: InternalAxiosRequestConfig
+    config?: AxiosRequestConfig
   ) {
     return this.client.post<T>(url, data, config);
   }
   public put<T = unknown, D = unknown>(
     url: string,
     data?: D,
-    config?: InternalAxiosRequestConfig
+    config?: AxiosRequestConfig
   ) {
     return this.client.put<T>(url, data, config);
   }
-  public delete<T = unknown>(url: string, config?: InternalAxiosRequestConfig) {
+  public delete<T = unknown>(url: string, config?: AxiosRequestConfig) {
     return this.client.delete<T>(url, config);
   }
 }
