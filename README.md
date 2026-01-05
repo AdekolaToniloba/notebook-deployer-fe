@@ -1,36 +1,130 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aether | Cloud Notebook Deployment
 
-## Getting Started
+> **Turn your Jupyter Notebooks into scalable production APIs in seconds.**
 
-First, run the development server:
+Aether bridges the gap between Data Science and DevOps. It allows users to upload standard `.ipynb` files, automatically containerizes them, and deploys them as secure, scalable REST APIs on Google Cloud Run—all through a high-contrast, brutalist interface.
+
+![Aether Dashboard Screenshot](https://via.placeholder.com/1200x600?text=Aether+Dashboard+Preview) 
+
+## 🚀 Key Features
+
+*   **One-Click Deployment:** Upload a `.ipynb` file and get a live HTTPS endpoint.
+*   **Real-Time Build Telemetry:** Live streaming of Docker build logs via WebSockets.
+*   **Model Registry:** Manage multiple versions of machine learning artifacts per deployment.
+*   **Hot Reloading:** Update models in production without downtime.
+*   **Interactive Documentation:** Auto-generated Swagger UI for every deployed API.
+*   **Proactive Security:** JWT-based authentication with intelligent token rotation and proactive refresh scheduling.
+*   **Brutalist UI:** A distinct, high-contrast design system built with Tailwind CSS and Framer Motion.
+
+## 🛠️ Tech Stack
+
+**Core Framework**
+*   [Next.js 14](https://nextjs.org/) (App Router)
+*   [TypeScript](https://www.typescriptlang.org/)
+*   [React 18](https://react.dev/)
+
+**Styling & UI**
+*   [Tailwind CSS](https://tailwindcss.com/)
+*   [Framer Motion](https://www.framer.com/motion/) (Animations)
+*   [Shadcn/ui](https://ui.shadcn.com/) (Component Primitives)
+*   [Lucide React](https://lucide.dev/) (Icons)
+
+**State & Data**
+*   [Zustand](https://github.com/pmndrs/zustand) (Global Store)
+*   [Axios](https://axios-http.com/) (Networking with Interceptors)
+*   [Zod](https://zod.dev/) (Schema Validation)
+*   [React Hook Form](https://react-hook-form.com/)
+
+## ⚡ Getting Started
+
+### Prerequisites
+
+*   Node.js 18.17 or later
+*   npm or yarn or pnpm
+
+### Installation
+
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/AdekolaToniloba/notebook-deployer-fe.git
+    cd notebook-deployer-fe
+    ```
+
+2.  **Install dependencies**
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
+
+3.  **Configure Environment**
+    Create a `.env.local` file in the root directory. You can copy the example configuration:
+    ```bash
+    cp .env.example .env.local
+    ```
+
+    **Required Variables:**
+    ```env
+    # The URL of the backend REST API
+    NEXT_PUBLIC_API_URL=https://your-backend-api.run.app
+
+    # The URL for WebSocket connections (usually same host, wss:// protocol)
+    NEXT_PUBLIC_WS_URL=wss://your-backend-api.run.app
+    ```
+
+4.  **Run Development Server**
+    ```bash
+    npm run dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+## 🏗️ Architecture Highlights
+
+### Proactive Authentication Strategy
+Unlike standard auth implementations that wait for a 401 error to refresh tokens, Aether uses a **proactive scheduler**.
+*   It calculates the exact expiry time of the JWT.
+*   It schedules a refresh 60 seconds *before* expiry.
+*   It handles tab focus events to instantly refresh stale tokens when a user returns to the app after inactivity.
+
+### WebSocket Log Streaming
+The deployment logs are streamed in real-time to provide immediate feedback during the containerization process.
+*   **Protocol:** Secure WebSockets (`wss://`).
+*   **Resilience:** Automatic reconnection logic if the stream is interrupted.
+*   **Fallback:** If the stream fails, the UI gracefully falls back to REST-based polling.
+
+## 📂 Project Structure
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+├── app/                  # Next.js App Router pages
+│   ├── (auth)/           # Login/Register routes
+│   ├── (dashboard)/      # Main app interface (Deployments, Notebooks)
+│   └── layout.tsx        # Root layout & providers
+├── components/           # React components
+│   ├── ui/               # Reusable primitives (buttons, dialogs)
+│   ├── features/         # Domain-specific components (ModelManager, etc.)
+│   └── deployments/      # Deployment-specific widgets (LogTerminal)
+├── lib/                  # Utilities & Logic
+│   ├── api/              # API services & Axios client
+│   ├── auth/             # Token management logic
+│   ├── hooks/            # Custom React hooks (useDeploymentLogs)
+│   └── stores/           # Zustand state stores
+└── types/                # TypeScript definitions
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+🤝 Contributing
+Contributions are welcome! Please follow these steps:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Fork the repository.
 
-## Learn More
+Create a feature branch (git checkout -b feature/AmazingFeature).
 
-To learn more about Next.js, take a look at the following resources:
+Commit your changes (git commit -m 'Add some AmazingFeature').
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Push to the branch (git push origin feature/AmazingFeature).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open a Pull Request.
 
-## Deploy on Vercel
+📄 License
+Distributed under the MIT License. See LICENSE for more information.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built by Toniloba Adekola & Ifihanagbara Olusheye
